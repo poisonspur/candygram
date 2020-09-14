@@ -7,7 +7,7 @@ def main():
     feed_name = 'PoisonSpurBlog'
     mongo_feed = get_mongo_feed(feed_name)
     #DCJ1
-    print mongo_feed['feed']['_id']
+    print(mongo_feed['feed']['_id'])
     incoming_feed = {}
     if mongo_feed['feed']:
         feed_url = mongo_feed['feed'].get('feed_url', '')
@@ -15,8 +15,9 @@ def main():
             incoming_feed = get_incoming_feed(feed_url)
 
     if incoming_feed:
-        if incoming_feed['pub_ts'] > mongo_feed['feed']['pub_ts']:
+        if incoming_feed['pub_ts'] >= mongo_feed['feed']['pub_ts']:
             entries = incoming_feed.get('entries', {})
+            print(entries[0])
             if entries:
                 update_feed_entries(mongo_feed, entries)
                 collection = mongo_feed['db']['feeds']
@@ -39,6 +40,7 @@ def get_mongo_feed(feed_name):
     mongo_feed['client'] = client
     mongo_feed['db'] = db
     mongo_feed['feed'] = feed
+    print(mongo_feed)
     
     return mongo_feed
 
@@ -48,8 +50,8 @@ def get_incoming_feed(feed_url):
     # parsed_feed = feedparser.parse('http://localhost/feeds/rss.xml')
     incoming_feed = feedparser.parse(feed_url)
     for k in incoming_feed.keys():
-        print k
-    #print incoming_feed['updated_parsed']
+        print(k)
+    #print(incoming_feed['updated_parsed'])
     incoming_feed['pub_ts'] = calendar.timegm(incoming_feed['updated_parsed'])
     return incoming_feed
 
@@ -58,7 +60,7 @@ def update_feed_entries(mongo_feed, entries):
 
     # TODO - deleted blog entry handling
     collection = mongo_feed['db'].feed_items
-    print collection
+    print(collection)
     mongo_entries = []
     for entry in entries:
         doc = { }
@@ -67,10 +69,10 @@ def update_feed_entries(mongo_feed, entries):
         doc['url'] = entry['link']
         doc['body'] = entry['summary']
         doc['pub_ts'] = calendar.timegm(entry['published_parsed'])
-        print str(doc['pub_ts'])
+        print(str(doc['pub_ts']))
         id = collection.update({'url' : doc['url']}, doc, upsert=True)
 
-    print collection.count()
+    print(collection.count())
 
 
 if __name__ == '__main__':
